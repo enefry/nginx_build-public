@@ -64,7 +64,7 @@ jobs:
           QUAY_USERNAME: ${{ secrets.QUAY_USERNAME }}
           QUAY_TOKEN: ${{ secrets.QUAY_TOKEN }}
         run: |
-          if [[ "$GITHUB_EVENT_NAME" != "pull_request" && -n "$DOCKERHUB_USERNAME" && -n "$DOCKERHUB_TOKEN" && -n "$QUAY_USERNAME" && -n "$QUAY_TOKEN" ]]; then
+          if [[ "$GITHUB_EVENT_NAME" != "pull_request" && "$GITHUB_REF" == "refs/heads/main" && -n "$DOCKERHUB_USERNAME" && -n "$DOCKERHUB_TOKEN" && -n "$QUAY_USERNAME" && -n "$QUAY_TOKEN" ]]; then
             echo "enabled=true" >> "$GITHUB_OUTPUT"
           else
             echo "enabled=false" >> "$GITHUB_OUTPUT"
@@ -91,6 +91,7 @@ jobs:
           context: .
           platforms: linux/${{ matrix.platform }}
           push: ${{ steps.publish.outputs.enabled == 'true' }}
+          load: ${{ github.event_name == 'pull_request' }}
           provenance: false
           build-args: |
             OPENSSL_VERSION=${{ env.OPENSSL_VERSION }}
@@ -98,6 +99,10 @@ jobs:
           tags: |
             renwei/nginx:${{ env.NGINX_VERSION }}-${{ matrix.platform }}
             quay.io/renwei_chen/nginx:${{ env.NGINX_VERSION }}-${{ matrix.platform }}
+
+      - name: Smoke test image
+        if: github.event_name == 'pull_request'
+        run: bash tests/image_smoke.sh "renwei/nginx:${{ env.NGINX_VERSION }}-${{ matrix.platform }}"
 
   merge:
     if: github.event_name != 'pull_request' && needs.build.outputs.publish == 'true'
