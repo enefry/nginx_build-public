@@ -1,4 +1,4 @@
-FROM docker.io/library/ubuntu:jammy as BUILDER
+FROM docker.io/library/ubuntu:26.04 as BUILDER
 ARG OPENSSL_VERSION=4.1.0
 
 USER root
@@ -21,22 +21,17 @@ RUN /usr/local/bin/apt-install-retry -y \
     libc-ares-dev \
     libcmark-dev \
     libgd-dev \
-    libgd3 \
     libimlib2-dev \
     libldap-dev \
     libmagickwand-dev \
     libpcre2-dev \
-    libpcre3 \
-    libpcre3-dev \
     libperl-dev \
     libssl-dev \
-    libxml2 \
     libxml2-dev \
     libxslt1-dev \
-    libxslt1.1 \
     make \
     mercurial \
-    p7zip \
+    7zip \
     perl \
     pkg-config \
     libre2-dev \
@@ -197,6 +192,7 @@ RUN cd /builder/submodules/quickjs \
 
 RUN tree /builder/
 
+# GCC 15 defaults to C23; legacy modules require the pre-C23 function declarations.
 RUN ldconfig && \
     cd "/builder/nginx" && \
     export SREGEX_INC=/nginx/include && \
@@ -265,7 +261,7 @@ RUN ldconfig && \
     --add-module=../submodules/njs/nginx  \
     --add-module=../submodules/nginx-dav-ext-module  \
     --add-module=../submodules/ngx-fancyindex  \
-    --with-cc-opt="-I/builder/submodules/quickjs" \
+    --with-cc-opt="-std=gnu17 -I/builder/submodules/quickjs" \
     --with-ld-opt="-L/builder/submodules/quickjs" \
     && echo "configure ok" && make -j 2 && make install
 
@@ -284,7 +280,7 @@ RUN (ldd /sbin/nginx; ldd /etc/nginx/modules/ngx_otel_module.so) | tr -s '[:blan
 
 
 
-FROM docker.io/library/ubuntu:jammy as nginx
+FROM docker.io/library/ubuntu:26.04 as nginx
 USER root
 COPY --from=BUILDER /etc/nginx /etc/nginx
 COPY --from=BUILDER /etc/nginx.tar.gz /etc/nginx/nginx_build.tar.gz
