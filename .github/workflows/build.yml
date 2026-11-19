@@ -48,8 +48,10 @@ jobs:
           else
             echo "NGINX_VERSION=${NGINX_MAINLINE_VERSION}" >> $GITHUB_ENV
           fi
-      - name: Check source-fetch regressions
-        run: bash tests/source_fetch.sh
+      - name: Check build helper regressions
+        run: |
+          bash tests/source_fetch.sh
+          bash tests/apt_install_retry.sh
       - name: FetchSource
         run: ./update_sources.sh
         env:

@@ -6,7 +6,8 @@ USER root
 
 #RUN apt-get update
 # 安装编译依赖
-RUN apt-get update && apt-get install -y \
+COPY --chmod=0755 scripts/apt_install_retry.sh /usr/local/bin/apt-install-retry
+RUN /usr/local/bin/apt-install-retry -y \
     build-essential \
     bison \
     ca-certificates \
@@ -291,8 +292,8 @@ COPY --from=BUILDER /sbin/nginx /sbin/nginx
 COPY --from=BUILDER /builder/deps /builder/deps
 
 # 修复权限
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends --no-install-suggests \
+COPY --chmod=0755 scripts/apt_install_retry.sh /usr/local/bin/apt-install-retry
+RUN /usr/local/bin/apt-install-retry -y --no-install-recommends --no-install-suggests \
     libcap2-bin rsync curl net-tools supervisor logrotate cron ca-certificates openssl \
     && setcap CAP_NET_BIND_SERVICE=+ep /sbin/nginx \
     && apt-get purge -y --auto-remove \
