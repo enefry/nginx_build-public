@@ -1,0 +1,34 @@
+name: Auto Version Check
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/auto_check.yml"
+      - "scripts/auto_update_versions.sh"
+  schedule:
+    - cron: '0 0 * * *' # 每天 UTC 0 点运行 (北京时间 8 点)
+  workflow_dispatch: # 允许手动点击运行
+    
+jobs:
+  check-versions:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+      - name: Run Update Script
+        id: versions
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          chmod +x scripts/auto_update_versions.sh
+          ./scripts/auto_update_versions.sh
+      - name: Build updated versions
+        if: steps.versions.outputs.updated == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BUILD_REF: ${{ github.ref_name }}
+        run: gh workflow run build.yml --repo "$GITHUB_REPOSITORY" --ref "$BUILD_REF"

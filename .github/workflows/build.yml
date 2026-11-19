@@ -1,0 +1,154 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/build.yml"
+      - "Dockerfile"
+      - "config/**"
+      - "scripts/**"
+      - "submodules/**"
+      - "versions.env"
+      - "update_sources.sh"
+      - ".gitmodules"
+      - "tests/**"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        track: [mainline, stable]
+        platform: [amd64, arm64]
+        include:
+          - platform: amd64
+            runner: ubuntu-latest
+          - platform: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    outputs:
+      publish: ${{ steps.publish.outputs.enabled }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          lfs: true
+      - name: Load Version Config
+        run: cat versions.env >> $GITHUB_ENV
+      - name: Resolve nginx version for ${{ matrix.track }}
+        run: |
+          if [ "${{ matrix.track }}" = "stable" ]; then
+            echo "NGINX_VERSION=${NGINX_STABLE_VERSION}" >> $GITHUB_ENV
+          else
+            echo "NGINX_VERSION=${NGINX_MAINLINE_VERSION}" >> $GITHUB_ENV
+          fi
+      - name: Check source-fetch regressions
+        run: bash tests/source_fetch.sh
+      - name: FetchSource
+        run: ./update_sources.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Check registry publishing configuration
+        id: publish
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          QUAY_USERNAME: ${{ secrets.QUAY_USERNAME }}
+          QUAY_TOKEN: ${{ secrets.QUAY_TOKEN }}
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" != "pull_request" && -n "$DOCKERHUB_USERNAME" && -n "$DOCKERHUB_TOKEN" && -n "$QUAY_USERNAME" && -n "$QUAY_TOKEN" ]]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Build-only run. Configure DOCKERHUB_USERNAME, DOCKERHUB_TOKEN, QUAY_USERNAME and QUAY_TOKEN to enable image publishing."
+          fi
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+      - name: Login to Docker Hub
+        if: steps.publish.outputs.enabled == 'true'
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Login to quay.io
+        if: steps.publish.outputs.enabled == 'true'
+        uses: docker/login-action@v4
+        with:
+          registry: quay.io
+          username: ${{ secrets.QUAY_USERNAME }}
+          password: ${{ secrets.QUAY_TOKEN }}
+      - name: Build image (${{ matrix.platform }})
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/${{ matrix.platform }}
+          push: ${{ steps.publish.outputs.enabled == 'true' }}
+          provenance: false
+          build-args: |
+            OPENSSL_VERSION=${{ env.OPENSSL_VERSION }}
+          # 只 push 带 -<platform> 后缀的临时 tag，由 merge 阶段合成 manifest
+          tags: |
+            renwei/nginx:${{ env.NGINX_VERSION }}-${{ matrix.platform }}
+            quay.io/renwei_chen/nginx:${{ env.NGINX_VERSION }}-${{ matrix.platform }}
+
+  merge:
+    if: github.event_name != 'pull_request' && needs.build.outputs.publish == 'true'
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        track: [mainline, stable]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Load Version Config
+        run: cat versions.env >> $GITHUB_ENV
+      - name: Resolve nginx version & tag list for ${{ matrix.track }}
+        run: |
+          if [ "${{ matrix.track }}" = "stable" ]; then
+            VERSION="${NGINX_STABLE_VERSION}"
+            IS_LATEST=false
+          else
+            VERSION="${NGINX_MAINLINE_VERSION}"
+            IS_LATEST=true
+          fi
+          echo "NGINX_VERSION=${VERSION}" >> $GITHUB_ENV
+          echo "IS_LATEST=${IS_LATEST}"   >> $GITHUB_ENV
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+      - name: Login to Docker Hub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Login to quay.io
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v4
+        with:
+          registry: quay.io
+          username: ${{ secrets.QUAY_USERNAME }}
+          password: ${{ secrets.QUAY_TOKEN }}
+      - name: Create multi-arch manifest
+        run: |
+          set -eux
+          for REPO in "renwei/nginx" "quay.io/renwei_chen/nginx"; do
+            TAG_FLAGS=(
+              -t "${REPO}:${NGINX_VERSION}"
+              -t "${REPO}:${{ matrix.track }}"
+            )
+            if [ "${IS_LATEST}" = "true" ]; then
+              TAG_FLAGS+=( -t "${REPO}:latest" )
+            fi
+            docker buildx imagetools create \
+              "${TAG_FLAGS[@]}" \
+              "${REPO}:${NGINX_VERSION}-amd64" \
+              "${REPO}:${NGINX_VERSION}-arm64"
+          done

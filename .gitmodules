@@ -1,0 +1,51 @@
+[submodule "submodules/zlib"]
+	path = submodules/zlib
+	url = https://github.com/madler/zlib.git
+[submodule "submodules/ngx_brotli"]
+	path = submodules/ngx_brotli
+	url = https://github.com/google/ngx_brotli.git
+[submodule "submodules/set-misc-nginx-module"]
+	path = submodules/set-misc-nginx-module
+	url = https://github.com/openresty/set-misc-nginx-module.git
+[submodule "submodules/ngx_http_geoip2_module"]
+	path = submodules/ngx_http_geoip2_module
+	url = https://github.com/leev/ngx_http_geoip2_module.git
+[submodule "submodules/ngx_devel_kit"]
+	path = submodules/ngx_devel_kit
+	url = https://github.com/vision5/ngx_devel_kit.git
+[submodule "submodules/array-var-nginx-module"]
+	path = submodules/array-var-nginx-module
+	url = https://github.com/openresty/array-var-nginx-module.git
+[submodule "submodules/replace-filter-nginx-module"]
+	path = submodules/replace-filter-nginx-module
+	url = https://github.com/openresty/replace-filter-nginx-module.git
+[submodule "submodules/sregex"]
+	path = submodules/sregex
+	url = https://github.com/openresty/sregex.git
+[submodule "submodules/headers-more-nginx-module"]
+	path = submodules/headers-more-nginx-module
+	url = https://github.com/openresty/headers-more-nginx-module.git
+[submodule "submodules/echo-nginx-module"]
+	path = submodules/echo-nginx-module
+	url = https://github.com/openresty/echo-nginx-module.git
+[submodule "submodules/nginx-http-auth-digest"]
+	path = submodules/nginx-http-auth-digest
+	url = https://github.com/atomx/nginx-http-auth-digest.git
+[submodule "submodules/ngx_markdown_filter_module"]
+	path = submodules/ngx_markdown_filter_module
+	url = https://github.com/ukarim/ngx_markdown_filter_module.git
+[submodule "submodules/ngx_upstream_jdomain"]
+	path = submodules/ngx_upstream_jdomain
+	url = https://github.com/nicholaschiasson/ngx_upstream_jdomain.git
+[submodule "submodules/nginx-vod-module"]
+	path = submodules/nginx-vod-module
+	url = https://github.com/dio-az/nginx-vod-module.git
+[submodule "submodules/nginx-auth-ldap"]
+	path = submodules/nginx-auth-ldap
+	url = https://github.com/kvspb/nginx-auth-ldap.git
+[submodule "submodules/nginx-dav-ext-module"]
+	path = submodules/nginx-dav-ext-module
+	url = https://github.com/arut/nginx-dav-ext-module.git
+[submodule "submodules/ngx-fancyindex"]
+	path = submodules/ngx-fancyindex
+	url = https://github.com/aperezdc/ngx-fancyindex.git

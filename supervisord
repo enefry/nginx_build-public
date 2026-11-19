@@ -1,0 +1,14 @@
+[supervisord]
+nodaemon=true
+user=root  # 加上这一行消除 Supervisor is running as root 的 CRIT 告警
+
+[program:crond]
+command=/usr/sbin/cron -f
+autostart=true
+autorestart=true
+
+[program:nginx]
+# 尝试直接把前台运行指令传给脚本
+command=/nginx_startup.sh -c "/etc/nginx/nginx.conf" -g "daemon off;"
+autostart=true
+autorestart=true

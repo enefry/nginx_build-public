@@ -1,0 +1,25 @@
+
+---------2026年 4月 5日 星期日 11时30分30秒 CST--------
+nginx: 1.29.5
+ngx_brotli: a71f9312c2deb28875acc7bacfdd5695a111aa53
+ngx_brotli: a71f9312c2deb28875acc7bacfdd5695a111aa53
+set-misc-nginx-module: fdad936b03a501449fa1d0190052002fab408e98
+ngx_http_geoip2_module: 445df24ef3781e488cee3dfe8a1e111997fc1dfe
+ngx_devel_kit: bd44d16302273052d6005d7bdb55f74e23813de3
+array-var-nginx-module: 8afc69da875d6619c228ea1f564d6367b5293d52
+replace-filter-nginx-module: 0b432c649d2dc27ca7cf122ed06ff24fd9d7b3cf
+sregex: c275d2291f5b7f1b3dea6b2c1f7818791360cca8
+headers-more-nginx-module: e76a51306b152c2d3f3706053dcadb5a6bed9013
+echo-nginx-module: 623ff190b91428cd83fae75050372904a1be0f2e
+nginx-http-auth-digest: ac91c88017a6a4f9858a1b883ae8ccba8c6931d0
+ngx_markdown_filter_module: 11eef87a7966a72cbd10da1f80472b8b3a24c198
+ngx_upstream_jdomain: 7fe2eb4581c0bd7d2cba53a5ee3b1c3f48ca58b5
+nginx-vod-module: 26f06877b0f2a2336e59cda93a3de18d7b23a3e2
+nginx-auth-ldap: 241200eac8e4acae74d353291bd27f79e5ca3dc4
+nginx-dav-ext-module: f5e30888a256136d9c550bf1ada77d6ea78a48af
+ngx-fancyindex: 70311f239ec1e88ff79c669d126d08532ddb8554
+headers-more-nginx-module: e76a51306b152c2d3f3706053dcadb5a6bed9013
+quickjs: d7ae12ae71dfd6ab2997527d295014a8996fa0f9
+njs: 42b4b62afaeec63c1722219eb78f8e7751c702ce
+nginx-rtmp-module: a0af86689c1d9e98c00b6e8fb8588d43ceba0757
+------------------------

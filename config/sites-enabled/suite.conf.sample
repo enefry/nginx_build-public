@@ -1,0 +1,48 @@
+server {
+    listen 80;
+    server_name vscode.example.com;
+
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+
+    listen 443 quic;
+    listen [::]:443 quic;
+
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    http2  on;
+
+    #Alt-Svc响应头
+    add_header alt-svc 'h3-27=":443"; ma=86400,h3-29=":443"; ma=86400';
+
+    server_name                  vscode.example.com;
+
+    include                      /etc/nginx/ssl.conf;
+    include                      /etc/nginx/snippets/authelia-location.conf;
+
+    access_log /var/log/nginx/vscode_access.log;
+    error_log /var/log/nginx/vscode_error.log;
+
+    location /websocket {
+        if ($http_upgrade != "websocket") {
+            return               404;
+        }
+        proxy_redirect           off;
+        proxy_pass               http://127.0.0.1:1234; # 假设WebSocket监听在环回地址的 1234 端口上
+        proxy_http_version       1.1;
+        proxy_set_header         Upgrade $http_upgrade;
+        proxy_set_header         Connection "upgrade";
+        proxy_set_header         Host $host;
+        proxy_set_header         X-Real-IP $remote_addr;
+        proxy_set_header         X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+
+    location / {
+        include                  /etc/nginx/snippets/proxy.conf;
+        include                  /etc/nginx/snippets/authelia-authrequest.conf;
+        proxy_pass               http://127.0.0.1:9090;
+    }
+}
