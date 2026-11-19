@@ -192,6 +192,7 @@ RUN cd /builder/submodules/quickjs \
 
 RUN tree /builder/
 
+# GCC 15 defaults to C23; legacy modules require the pre-C23 function declarations.
 RUN ldconfig && \
     cd "/builder/nginx" && \
     export SREGEX_INC=/nginx/include && \
@@ -260,7 +261,7 @@ RUN ldconfig && \
     --add-module=../submodules/njs/nginx  \
     --add-module=../submodules/nginx-dav-ext-module  \
     --add-module=../submodules/ngx-fancyindex  \
-    --with-cc-opt="-I/builder/submodules/quickjs" \
+    --with-cc-opt="-std=gnu17 -I/builder/submodules/quickjs" \
     --with-ld-opt="-L/builder/submodules/quickjs" \
     && echo "configure ok" && make -j 2 && make install
 
