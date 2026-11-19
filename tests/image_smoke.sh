@@ -2,7 +2,7 @@
 set -euo pipefail
 
 image=${1:?Usage: tests/image_smoke.sh IMAGE}
-docker run --rm --entrypoint /bin/sh "$image" -s <<'CONTAINER'
+docker run --rm -i --entrypoint /bin/sh "$image" -s <<'CONTAINER'
 set -eu
 nginx -V
 nginx -t
